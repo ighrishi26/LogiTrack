@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Django
+*.sqlite3
+*.sqlite3.*
+db.sqlite3
+db.sqlite3.*
+media/
+staticfiles/
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+
+# React / Node
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backups
+*.bak
+*.backup
+*.backup_*
