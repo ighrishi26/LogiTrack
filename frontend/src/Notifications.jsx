@@ -94,7 +94,6 @@ export default function Notifications() {
     }
   }, [filter]);
 
-  // Load the signed-in user's profile.
   useEffect(() => {
     let cancelled = false;
 
@@ -116,8 +115,6 @@ export default function Notifications() {
     };
   }, [logout]);
 
-  // Defer loading until after the effect body has finished.
-  // This avoids the synchronous setState-in-effect lint error.
   useEffect(() => {
     let cancelled = false;
 
@@ -179,7 +176,9 @@ export default function Notifications() {
       <main className="dashboard-main notifications-page">
         <header className="notifications-header">
           <div>
-            <span className="eyebrow">UPDATES &amp; ACTIVITY</span>
+            <span className="eyebrow">
+              UPDATES &amp; ACTIVITY
+            </span>
             <h1>Notifications</h1>
             <p>
               Stay informed about shipment changes and delivery issues.
@@ -259,7 +258,6 @@ export default function Notifications() {
             <div className="notifications-error" role="alert">
               <CircleAlert size={18} />
               <span>{error}</span>
-
               <button type="button" onClick={loadNotifications}>
                 Retry
               </button>

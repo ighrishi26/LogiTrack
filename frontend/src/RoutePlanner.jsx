@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
 
+import { useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
@@ -12,7 +12,6 @@ import {
 import api from "./api";
 import Sidebar from "./Sidebar";
 import PageFooter from "./PageFooter";
-import "./RoutePlanner.css";
 
 function getResults(data) {
   return Array.isArray(data) ? data : data?.results || [];
@@ -27,7 +26,6 @@ function getErrorMessage(error) {
     return Object.entries(data)
       .map(([key, value]) => {
         const message = Array.isArray(value) ? value.join(" ") : String(value);
-
         return `${key}: ${message}`;
       })
       .join(" ");
@@ -42,7 +40,6 @@ export default function RoutePlanner() {
   const [drivers, setDrivers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [shipments, setShipments] = useState([]);
-
   const [selectedRoute, setSelectedRoute] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -86,10 +83,22 @@ export default function RoutePlanner() {
       setVehicles(getResults(vehiclesResponse.data));
       setShipments(getResults(shipmentsResponse.data));
     } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
+  console.error("Route Planner API Error:", {
+    message: err.message,
+    url: err.config?.url,
+    status: err.response?.status,
+    response: err.response?.data,
+  });
+
+  setError(
+    err.response?.data?.detail ||
+    `Request failed: ${err.config?.url || "Unknown API"} - ${
+      err.response?.status || err.message
+    }`
+  );
+} finally {
+  setLoading(false);
+}
   }, []);
 
   useEffect(() => {
@@ -120,6 +129,7 @@ export default function RoutePlanner() {
 
       setSelectedRoute(response.data);
       setNotice("Delivery route created successfully.");
+
       setForm({
         name: "",
         route_date: new Date().toLocaleDateString("en-CA"),
@@ -137,7 +147,6 @@ export default function RoutePlanner() {
 
   async function addStop(event) {
     event.preventDefault();
-
     if (!selectedRoute) return;
 
     setSaving(true);
@@ -154,6 +163,7 @@ export default function RoutePlanner() {
 
       setSelectedRoute(response.data);
       setNotice("Shipment added to the route.");
+
       setStopForm({
         shipment: "",
         stop_order: String((response.data.stops?.length || 0) + 1),
@@ -169,7 +179,6 @@ export default function RoutePlanner() {
 
   async function updateProgress(event) {
     const status = event.target.value;
-
     if (!selectedRoute) return;
 
     setSaving(true);
@@ -197,6 +206,7 @@ export default function RoutePlanner() {
 
     try {
       const response = await api.get(`/routes/${route.id}/`);
+
       setSelectedRoute(response.data);
       setStopForm({
         shipment: "",
@@ -225,10 +235,12 @@ export default function RoutePlanner() {
     <div className="dashboard-layout">
       <Sidebar profile={profile} onLogout={handleLogout} />
 
-      <main className="route-planner-main">
+      <main className="dashboard-main route-planner-main">
         <header className="route-planner-header">
           <div>
-            <span className="route-planner-eyebrow">LOGISTICS OPERATIONS</span>
+            <span className="route-planner-eyebrow">
+              LOGISTICS OPERATIONS
+            </span>
             <h1>Delivery Route Planner</h1>
             <p>
               Assign drivers, allocate vehicles, and organize shipment stops.
@@ -289,7 +301,10 @@ export default function RoutePlanner() {
             <h2>Create a delivery route</h2>
             <p>Choose the driver and vehicle for this delivery run.</p>
 
-            <form onSubmit={createRoute} className="route-planner-form">
+            <form
+              onSubmit={createRoute}
+              className="route-planner-form"
+            >
               <label>
                 Route name
                 <input
@@ -389,10 +404,14 @@ export default function RoutePlanner() {
                       <small>
                         {route.route_date} · {route.driver_name}
                       </small>
-                      <small>{route.stops?.length || 0} stops</small>
+                      <small>
+                        {route.stops?.length || 0} stops
+                      </small>
                     </span>
 
-                    <span className="route-planner-status">{route.status}</span>
+                    <span className="route-planner-status">
+                      {route.status}
+                    </span>
                     <ArrowRight size={17} />
                   </button>
                 ))}
@@ -405,10 +424,13 @@ export default function RoutePlanner() {
           <section className="route-planner-panel route-planner-details">
             <div className="route-planner-details-header">
               <div>
-                <span className="route-planner-eyebrow">ROUTE DETAILS</span>
+                <span className="route-planner-eyebrow">
+                  ROUTE DETAILS
+                </span>
                 <h2>{selectedRoute.name}</h2>
                 <p>
-                  {selectedRoute.route_date} · {selectedRoute.driver_name} ·{" "}
+                  {selectedRoute.route_date} ·{" "}
+                  {selectedRoute.driver_name} ·{" "}
                   {selectedRoute.vehicle_registration}
                 </p>
               </div>
@@ -448,10 +470,15 @@ export default function RoutePlanner() {
                 ))}
               </ol>
             ) : (
-              <p>No shipments have been assigned to this route yet.</p>
+              <p>
+                No shipments have been assigned to this route yet.
+              </p>
             )}
 
-            <form onSubmit={addStop} className="route-planner-stop-form">
+            <form
+              onSubmit={addStop}
+              className="route-planner-stop-form"
+            >
               <label>
                 Existing shipment
                 <select
@@ -467,8 +494,8 @@ export default function RoutePlanner() {
                   <option value="">Select a shipment</option>
                   {shipments.map((shipment) => (
                     <option key={shipment.id} value={shipment.id}>
-                      {shipment.tracking_number} — {shipment.origin} to{" "}
-                      {shipment.destination}
+                      {shipment.tracking_number} —{" "}
+                      {shipment.origin} to {shipment.destination}
                     </option>
                   ))}
                 </select>
