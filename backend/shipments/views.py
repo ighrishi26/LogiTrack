@@ -1,27 +1,31 @@
 
-from django.utils.dateparse import parse_date
-from django.shortcuts import get_object_or_404
 from django.db.models import Count
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.utils.dateparse import parse_date
 
-from rest_framework import viewsets, permissions
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from alerts.services import (
+    notify_delivery_exception,
+    notify_shipment_status_changed,
+)
+
 from .models import (
+    DeliveryException,
     Shipment,
     TrackingHistory,
-    DeliveryException,
 )
 from .serializers import (
-    ShipmentSerializer,
-    PublicShipmentTrackingSerializer,
     DeliveryExceptionSerializer,
+    PublicShipmentTrackingSerializer,
+    ShipmentSerializer,
 )
-from django.utils import timezone
-from rest_framework.decorators import action
-from rest_framework import status
 
 
 class ShipmentViewSet(viewsets.ModelViewSet):
@@ -121,6 +125,8 @@ class ShipmentViewSet(viewsets.ModelViewSet):
                 updated_by=user,
             )
 
+            notify_shipment_status_changed(shipment)
+
     def destroy(self, request, *args, **kwargs):
         if getattr(request.user, "role", None) in [
             "DRIVER",
@@ -185,6 +191,7 @@ class ShipmentStatsView(APIView):
 
         return Response(data)
 
+
 class DeliveryExceptionViewSet(viewsets.ModelViewSet):
     serializer_class = DeliveryExceptionSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -238,7 +245,8 @@ class DeliveryExceptionViewSet(viewsets.ModelViewSet):
                 "you created."
             )
 
-        serializer.save(reported_by=user)
+        delivery_exception = serializer.save(reported_by=user)
+        notify_delivery_exception(delivery_exception)
 
     def perform_update(self, serializer):
         user = self.request.user
