@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "inventory",
     "billing",
     "routes",
+    "alerts",
 ]
 
 MIDDLEWARE = [

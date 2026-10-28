@@ -14,6 +14,7 @@ import Fleet from "./Fleet";
 import Warehouses from "./Warehouses";
 import Billing from "./Billing";
 import WarehouseInventory from "./WarehouseInventory";
+import RoutePlanner from "./RoutePlanner";
 import "./index.css";
 import Notifications from "./Notifications";
 

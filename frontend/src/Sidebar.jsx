@@ -12,6 +12,7 @@ import {
   Settings,
   Truck,
   Users,
+  Bell,
   Warehouse,
 } from "lucide-react";
 
@@ -49,6 +50,7 @@ const navigationGroups = [
     items: [
       { label: "Analytics & Reports", path: "/reports", icon: BarChart3 },
       { label: "Settings", path: "/settings", icon: Settings },
+      {label: "Notifications", path: "/notifications", icon: Bell,},
     ],
   },
 ];
