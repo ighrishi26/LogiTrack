@@ -1,12 +1,6 @@
-
 import React from "react";
 import ReactDOM from "react-dom/client";
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import App from "./App";
 import Login from "./Login";
@@ -21,20 +15,19 @@ import Warehouses from "./Warehouses";
 import Billing from "./Billing";
 import WarehouseInventory from "./WarehouseInventory";
 import "./index.css";
+import Notifications from "./Notifications";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
-        <Route
-          path="/track/:trackingNumber"
-          element={<TrackingPage />}
-        />
+        <Route path="/track/:trackingNumber" element={<TrackingPage />} />
         <Route path="/login" element={<Login />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/routes" element={<RoutePlanner />} />
           <Route path="/shipments" element={<ManagementPage />} />
           <Route path="/live-tracking" element={<ManagementPage />} />
           <Route path="/pickup-delivery" element={<PickupDelivery />} />
@@ -45,10 +38,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/billing" element={<Billing />} />
           <Route path="/reports" element={<ManagementPage />} />
           <Route path="/settings" element={<ManagementPage />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
