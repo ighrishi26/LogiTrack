@@ -1,4 +1,3 @@
-
 import { NavLink } from "react-router-dom";
 import {
   BarChart3,
@@ -8,6 +7,7 @@ import {
   Package,
   MapPin,
   ReceiptText,
+  Route,
   Settings,
   Truck,
   Users,
@@ -21,7 +21,12 @@ const navigationGroups = [
       { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
       { label: "Shipments", path: "/shipments", icon: Package },
       { label: "Live Tracking", path: "/live-tracking", icon: MapPin },
-      { label: "Pickup & Delivery", path: "/pickup-delivery", icon: CalendarCheck },
+      {
+        label: "Pickup & Delivery",
+        path: "/pickup-delivery",
+        icon: CalendarCheck,
+      },
+      { label: "Route Planner", path: "/routes", icon: Route },
     ],
   },
   {
