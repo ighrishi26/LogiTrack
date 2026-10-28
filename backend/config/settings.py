@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "customers",
     "fleet",
     "warehouses",
+    "inventory",
     "billing",
     "routes",
 ]
