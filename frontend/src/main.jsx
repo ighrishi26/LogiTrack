@@ -19,6 +19,7 @@ import Customers from "./Customers";
 import Fleet from "./Fleet";
 import Warehouses from "./Warehouses";
 import Billing from "./Billing";
+import WarehouseInventory from "./WarehouseInventory";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -40,6 +41,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/customers" element={<Customers />} />
           <Route path="/fleet" element={<Fleet />} />
           <Route path="/warehouses" element={<Warehouses />} />
+          <Route path="/warehouse-inventory" element={<WarehouseInventory />} />
           <Route path="/billing" element={<Billing />} />
           <Route path="/reports" element={<ManagementPage />} />
           <Route path="/settings" element={<ManagementPage />} />

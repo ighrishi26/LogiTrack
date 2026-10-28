@@ -2,6 +2,7 @@
 import { NavLink } from "react-router-dom";
 import {
   BarChart3,
+  Boxes,
   CalendarCheck,
   LayoutDashboard,
   LogOut,
@@ -25,14 +26,19 @@ const navigationGroups = [
     ],
   },
   {
-    label: "MANAGEMENT",
-    items: [
-      { label: "Customers", path: "/customers", icon: Users },
-      { label: "Drivers & Fleet", path: "/fleet", icon: Truck },
-      { label: "Warehouses", path: "/warehouses", icon: Warehouse },
-      { label: "Billing & Invoices", path: "/billing", icon: ReceiptText },
-    ],
-  },
+  label: "MANAGEMENT",
+  items: [
+    { label: "Customers", path: "/customers", icon: Users },
+    { label: "Drivers & Fleet", path: "/fleet", icon: Truck },
+    { label: "Warehouses", path: "/warehouses", icon: Warehouse },
+    {
+      label: "Warehouse Inventory",
+      path: "/warehouse-inventory",
+      icon: Boxes,
+    },
+    { label: "Billing & Invoices", path: "/billing", icon: ReceiptText },
+  ],
+},
   {
     label: "INSIGHTS & SYSTEM",
     items: [
