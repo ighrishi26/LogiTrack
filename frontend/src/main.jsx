@@ -20,6 +20,7 @@ import Fleet from "./Fleet";
 import Warehouses from "./Warehouses";
 import Billing from "./Billing";
 import "./index.css";
+import Notifications from "./Notifications";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -43,6 +44,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/billing" element={<Billing />} />
           <Route path="/reports" element={<ManagementPage />} />
           <Route path="/settings" element={<ManagementPage />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

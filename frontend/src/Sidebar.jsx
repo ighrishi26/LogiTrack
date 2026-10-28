@@ -2,6 +2,7 @@
 import { NavLink } from "react-router-dom";
 import {
   BarChart3,
+  Bell,
   CalendarCheck,
   LayoutDashboard,
   LogOut,
@@ -22,6 +23,7 @@ const navigationGroups = [
       { label: "Shipments", path: "/shipments", icon: Package },
       { label: "Live Tracking", path: "/live-tracking", icon: MapPin },
       { label: "Pickup & Delivery", path: "/pickup-delivery", icon: CalendarCheck },
+      { label: "Notifications", path: "/notifications", icon: Bell },
     ],
   },
   {
