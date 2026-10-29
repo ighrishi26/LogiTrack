@@ -46,9 +46,10 @@ A full-stack logistics management system built with **React.js** and **Django RE
 - Driver and vehicle management
 - Fleet information and operational records
 
-### Warehouse Management
+### Warehouse Management & Inventory
 - Warehouse records and location information
 - Warehouse management operations
+- Inventory module for warehouse stock management
 
 ### Billing & Invoices
 - Create and manage invoices
@@ -64,22 +65,51 @@ A full-stack logistics management system built with **React.js** and **Django RE
 - Record resolution notes
 - Role-based access restrictions
 
+### Delivery Route Planner
+- Dedicated Route Planner page integrated with the dashboard sidebar
+- Create delivery routes with a route name and date
+- Assign drivers and vehicles from available records
+- View existing routes and their details
+- Add existing shipments as ordered delivery stops
+- Update route progress/status
+- Django REST Framework route API under `/api/routes/`
+
+### Notifications & Alerts
+- Dedicated Notifications page integrated with the dashboard sidebar
+- View notifications associated with the signed-in user
+- Filter notifications by **All**, **Unread**, and **Read**
+- View unread notification counts
+- Mark individual notifications or all notifications as read
+- Notification categories: shipment status, delivery exception, and system
+- Django REST Framework notifications API under `/api/notifications/`
+
+> **Sample data note:** Eight demonstration notifications were created in a local SQLite database for UI testing. These are **not** real shipment events and are **not included in the GitHub source-code repository**. A fresh installation starts with its own database contents.
+
 ## Project Structure
 
 ```text
 LogiTrack/
 ├── backend/
 │   ├── accounts/
+│   ├── alerts/              # Notifications API and models
 │   ├── billing/
 │   ├── config/
 │   ├── customers/
 │   ├── fleet/
+│   ├── inventory/           # Warehouse inventory
+│   ├── routes/              # Delivery route planning API
 │   ├── shipments/
 │   ├── warehouses/
 │   └── manage.py
 ├── frontend/
 │   ├── public/
 │   ├── src/
+│   │   ├── RoutePlanner.jsx
+│   │   ├── Notifications.jsx
+│   │   ├── Sidebar.jsx
+│   │   ├── main.jsx
+│   │   ├── index.css
+│   │   └── api.js
 │   ├── package.json
 │   └── vite.config.js
 ├── .gitignore
@@ -91,7 +121,6 @@ LogiTrack/
 ### Prerequisites
 
 Install:
-
 - Python
 - Node.js and npm
 - Git
@@ -99,15 +128,13 @@ Install:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/LogiTrack.git
+git clone https://github.com/ighrishi26/LogiTrack.git
 cd LogiTrack
 ```
 
-Replace `YOUR_USERNAME` with your GitHub username.
-
 ### 2. Backend Setup
 
-Open a terminal:
+Open a PowerShell terminal:
 
 ```powershell
 cd backend
@@ -116,7 +143,7 @@ python -m venv .venv
 pip install django djangorestframework djangorestframework-simplejwt django-cors-headers django-filter
 ```
 
-Configure your Django environment settings before running the server.
+Install any additional dependencies required by the project's backend configuration. Configure Django environment settings and secrets for your local environment before running the server.
 
 Apply database migrations:
 
@@ -130,23 +157,39 @@ Start the Django server:
 python manage.py runserver
 ```
 
-Backend URL:
-
-`http://127.0.0.1:8000/`
+Backend URL: `http://127.0.0.1:8000/`
 
 ### 3. Frontend Setup
 
-Open another terminal:
+Open another terminal from the project root:
 
 ```powershell
 cd frontend
 npm install
+```
+
+Set the frontend API base URL in `frontend/.env` (or the environment configuration you use):
+
+```dotenv
+VITE_API_URL=http://127.0.0.1:8000/api
+```
+
+Then run:
+
+```powershell
 npm run dev
 ```
 
-Frontend URL:
+Frontend URL: `http://localhost:5173/` (or the port shown by Vite).
 
-`http://localhost:5173/`
+### 4. Main Application Pages
+
+| Page | Frontend route |
+|---|---|
+| Route Planner | `/routes` |
+| Notifications | `/notifications` |
+
+Both pages use the authenticated dashboard layout and sidebar navigation.
 
 ## API Endpoints
 
@@ -160,8 +203,17 @@ Frontend URL:
 | GET | `/api/delivery-exceptions/` | List delivery exceptions |
 | POST | `/api/delivery-exceptions/` | Report a delivery exception |
 | POST | `/api/delivery-exceptions/{id}/resolve/` | Resolve a delivery exception |
+| GET | `/api/routes/` | List delivery routes |
+| POST | `/api/routes/` | Create a delivery route |
+| GET | `/api/routes/{id}/` | Retrieve route details |
+| POST | `/api/routes/{id}/stops/` | Add a shipment stop (frontend integration; verify action in viewset) |
+| PATCH | `/api/routes/{id}/progress/` | Update route progress (frontend integration; verify action in viewset) |
+| GET | `/api/notifications/` | List notifications |
+| GET | `/api/notifications/unread-count/` | Get unread count (frontend integration; verify action in viewset) |
+| POST | `/api/notifications/{id}/mark-read/` | Mark notification as read (frontend integration; verify action in viewset) |
+| POST | `/api/notifications/mark-all-read/` | Mark all notifications as read (frontend integration; verify action in viewset) |
 
-Protected endpoints require valid authentication and appropriate permissions.
+Protected endpoints require valid authentication and appropriate permissions. Custom action paths should be checked against the corresponding Django ViewSet definitions when deploying.
 
 ## Security
 
@@ -173,15 +225,23 @@ Protected endpoints require valid authentication and appropriate permissions.
 
 **Important:** Do not commit database files, credentials, JWT tokens, or production secrets.
 
+## Recent Updates
+
+- Integrated the Route Planner and Notifications pages into the main application navigation.
+- Registered the `alerts` application in Django's `INSTALLED_APPS`.
+- Updated dashboard-related navigation and frontend routing.
+- Added documentation for route and notification APIs, inventory, and page setup.
+- Latest confirmed GitHub push: commit [`8dfa9d7`](https://github.com/ighrishi26/LogiTrack/commit/8dfa9d7) on `main`.
+
 ## Development Status
 
-LogiTrack is under active development. Features and documentation may evolve as additional modules are completed and tested.
+LogiTrack is under active development. Features and documentation may evolve as additional modules are completed and tested. Route Planner and Notifications pages are integrated; their functionality depends on the corresponding backend routes, migrations, and API actions being available in the running environment.
 
 ## Future Enhancements
 
 - Delivery exception management interface
 - Improved real-time shipment tracking
-- Notification and alert system
+- Automatic event-driven notifications for real shipment updates
 - Advanced analytics and reporting
 - Deployment and production configuration
 
