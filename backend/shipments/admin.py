@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Shipment, TrackingHistory, DeliveryException
+from .models import DeliveryException, ProofOfDelivery, Shipment, TrackingHistory
 
 
 @admin.register(Shipment)
@@ -63,3 +63,30 @@ class DeliveryExceptionAdmin(admin.ModelAdmin):
         "updated_at",
         "resolved_at",
     )
+
+
+@admin.register(ProofOfDelivery)
+class ProofOfDeliveryAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "shipment",
+        "recipient_name",
+        "recipient_relationship",
+        "actual_delivery",
+        "recorded_by",
+        "created_at",
+    )
+    list_filter = (
+        "recipient_relationship",
+        "actual_delivery",
+        "created_at",
+    )
+    search_fields = (
+        "shipment__tracking_number",
+        "recipient_name",
+        "delivery_notes",
+    )
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )

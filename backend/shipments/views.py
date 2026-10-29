@@ -1,4 +1,5 @@
 
+from django.db import transaction
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -18,11 +19,13 @@ from alerts.services import (
 
 from .models import (
     DeliveryException,
+    ProofOfDelivery,
     Shipment,
     TrackingHistory,
 )
 from .serializers import (
     DeliveryExceptionSerializer,
+    ProofOfDeliverySerializer,
     PublicShipmentTrackingSerializer,
     ShipmentSerializer,
 )
@@ -137,6 +140,77 @@ class ShipmentViewSet(viewsets.ModelViewSet):
             )
 
         return super().destroy(request, *args, **kwargs)
+
+    @action(detail=True, methods=["get", "post"])
+    def proof(self, request, pk=None):
+        shipment = self.get_object()
+        user = request.user
+
+        if request.method == "GET":
+            if not hasattr(shipment, "proof_of_delivery"):
+                return Response(
+                    {"detail": "No proof of delivery found for this shipment."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            serializer = ProofOfDeliverySerializer(
+                shipment.proof_of_delivery,
+                context={"request": request},
+            )
+            return Response(serializer.data)
+
+        if getattr(user, "role", None) == "CUSTOMER":
+            raise PermissionDenied(
+                "Customers cannot submit proof of delivery."
+            )
+
+        if shipment.status == Shipment.Status.CANCELLED:
+            raise ValidationError({
+                "shipment": [
+                    "Cannot record proof of delivery for a cancelled shipment."
+                ]
+            })
+
+        if hasattr(shipment, "proof_of_delivery"):
+            raise ValidationError({
+                "shipment": [
+                    "Proof of delivery has already been recorded for this shipment."
+                ]
+            })
+
+        data = request.data.copy()
+        data["shipment"] = shipment.id
+
+        serializer = ProofOfDeliverySerializer(
+            data=data,
+            context={"request": request},
+        )
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            pod = serializer.save(recorded_by=user)
+            shipment.status = Shipment.Status.DELIVERED
+            shipment.actual_delivery = pod.actual_delivery.date()
+            shipment.save()
+
+            location = (
+                request.data.get("tracking_location")
+                or shipment.destination
+                or ""
+            )
+            notes = (
+                request.data.get("tracking_notes")
+                or f"Delivered to {pod.recipient_name} ({pod.get_recipient_relationship_display()}). Proof of delivery recorded."
+            )
+            TrackingHistory.objects.create(
+                shipment=shipment,
+                status=Shipment.Status.DELIVERED,
+                location=location,
+                notes=notes,
+                updated_by=user,
+            )
+            notify_shipment_status_changed(shipment)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class PublicShipmentTrackingView(APIView):
@@ -315,3 +389,109 @@ class DeliveryExceptionViewSet(viewsets.ModelViewSet):
             self.get_serializer(exception).data,
             status=status.HTTP_200_OK,
         )
+
+
+class ProofOfDeliveryViewSet(viewsets.ModelViewSet):
+    serializer_class = ProofOfDeliverySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    queryset = ProofOfDelivery.objects.select_related(
+        "shipment",
+        "recorded_by",
+    ).all()
+
+    filterset_fields = ["shipment", "recipient_relationship"]
+    search_fields = [
+        "shipment__tracking_number",
+        "recipient_name",
+        "delivery_notes",
+    ]
+    ordering_fields = ["created_at", "actual_delivery"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        role = getattr(user, "role", None)
+
+        if role == "CUSTOMER":
+            queryset = queryset.filter(shipment__created_by=user)
+
+        tracking_number = self.request.query_params.get("tracking_number")
+        if tracking_number:
+            queryset = queryset.filter(
+                shipment__tracking_number__iexact=tracking_number.strip()
+            )
+
+        return queryset
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        role = getattr(user, "role", None)
+
+        if role == "CUSTOMER":
+            raise PermissionDenied(
+                "Customers cannot submit proof of delivery."
+            )
+
+        shipment = serializer.validated_data["shipment"]
+
+        if shipment.status == Shipment.Status.CANCELLED:
+            raise ValidationError({
+                "shipment": [
+                    "Cannot record proof of delivery for a cancelled shipment."
+                ]
+            })
+
+        if (
+            hasattr(shipment, "proof_of_delivery")
+            or ProofOfDelivery.objects.filter(shipment=shipment).exists()
+        ):
+            raise ValidationError({
+                "shipment": [
+                    "Proof of delivery has already been recorded for this shipment."
+                ]
+            })
+
+        with transaction.atomic():
+            pod = serializer.save(recorded_by=user)
+
+            shipment.status = Shipment.Status.DELIVERED
+            shipment.actual_delivery = pod.actual_delivery.date()
+            shipment.save()
+
+            location = (
+                self.request.data.get("tracking_location")
+                or shipment.destination
+                or ""
+            )
+            notes = (
+                self.request.data.get("tracking_notes")
+                or f"Delivered to {pod.recipient_name} ({pod.get_recipient_relationship_display()}). Proof of delivery recorded."
+            )
+            TrackingHistory.objects.create(
+                shipment=shipment,
+                status=Shipment.Status.DELIVERED,
+                location=location,
+                notes=notes,
+                updated_by=user,
+            )
+            notify_shipment_status_changed(shipment)
+
+    def perform_update(self, serializer):
+        user = self.request.user
+        role = getattr(user, "role", None)
+
+        if role in ["DRIVER", "CUSTOMER"]:
+            raise PermissionDenied(
+                "Your role cannot update proof of delivery records."
+            )
+
+        serializer.save()
+
+    def destroy(self, request, *args, **kwargs):
+        role = getattr(request.user, "role", None)
+        if role != "ADMIN":
+            raise PermissionDenied(
+                "Only administrators can delete proof of delivery records."
+            )
+        return super().destroy(request, *args, **kwargs)
