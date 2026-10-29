@@ -15,6 +15,7 @@ import Warehouses from "./Warehouses";
 import Billing from "./Billing";
 import WarehouseInventory from "./WarehouseInventory";
 import RoutePlanner from "./RoutePlanner";
+import ProofOfDelivery from "./ProofOfDelivery";
 import "./index.css";
 import Notifications from "./Notifications";
 
@@ -32,6 +33,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/shipments" element={<ManagementPage />} />
           <Route path="/live-tracking" element={<ManagementPage />} />
           <Route path="/pickup-delivery" element={<PickupDelivery />} />
+          <Route path="/proof-of-delivery" element={<ProofOfDelivery />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/fleet" element={<Fleet />} />
           <Route path="/warehouses" element={<Warehouses />} />

@@ -1,7 +1,10 @@
 
+import os
 import uuid
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 
 class Shipment(models.Model):
@@ -156,3 +159,69 @@ class DeliveryException(models.Model):
             f"{self.shipment.tracking_number} - "
             f"{self.exception_type} ({self.status})"
         )
+
+
+def validate_proof_file(value):
+    max_size_bytes = 5 * 1024 * 1024  # 5 MB
+    if value.size > max_size_bytes:
+        raise ValidationError("File size cannot exceed 5 MB.")
+
+    ext = os.path.splitext(value.name)[1].lower()
+    allowed_extensions = [".jpg", ".jpeg", ".png", ".webp", ".pdf"]
+    if ext not in allowed_extensions:
+        raise ValidationError(
+            f"Unsupported file extension '{ext}'. "
+            f"Allowed extensions are: {', '.join(allowed_extensions)}."
+        )
+
+
+class ProofOfDelivery(models.Model):
+    class RelationshipType(models.TextChoices):
+        RECIPIENT = "RECIPIENT", "Direct Recipient"
+        FAMILY_MEMBER = "FAMILY_MEMBER", "Family Member"
+        COLLEAGUE = "COLLEAGUE", "Colleague / Coworker"
+        FRONT_DESK = "FRONT_DESK", "Reception / Front Desk"
+        SECURITY = "SECURITY", "Security Personnel"
+        NEIGHBOR = "NEIGHBOR", "Neighbor"
+        OTHER = "OTHER", "Other"
+
+    shipment = models.OneToOneField(
+        Shipment,
+        on_delete=models.CASCADE,
+        related_name="proof_of_delivery",
+    )
+    recipient_name = models.CharField(max_length=150)
+    recipient_relationship = models.CharField(
+        max_length=50,
+        choices=RelationshipType.choices,
+        default=RelationshipType.RECIPIENT,
+        blank=True,
+    )
+    actual_delivery = models.DateTimeField(default=timezone.now)
+    photo = models.FileField(
+        upload_to="proof_of_delivery/%Y/%m/",
+        null=True,
+        blank=True,
+        validators=[validate_proof_file],
+    )
+    delivery_notes = models.TextField(blank=True)
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="recorded_proofs",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Proof of delivery"
+        verbose_name_plural = "Proofs of delivery"
+
+    def __str__(self):
+        return (
+            f"POD for {self.shipment.tracking_number} - "
+            f"{self.recipient_name}"
+        )

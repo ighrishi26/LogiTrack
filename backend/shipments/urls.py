@@ -3,10 +3,11 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    ShipmentViewSet,
+    DeliveryExceptionViewSet,
+    ProofOfDeliveryViewSet,
     PublicShipmentTrackingView,
     ShipmentStatsView,
-    DeliveryExceptionViewSet,
+    ShipmentViewSet,
 )
 
 router = DefaultRouter()
@@ -15,6 +16,11 @@ router.register(
     "delivery-exceptions",
     DeliveryExceptionViewSet,
     basename="delivery-exception",
+)
+router.register(
+    "proof-of-delivery",
+    ProofOfDeliveryViewSet,
+    basename="proof-of-delivery",
 )
 
 urlpatterns = [
